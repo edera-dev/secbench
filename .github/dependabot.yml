@@ -1,0 +1,35 @@
+version: 2
+updates:
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: "daily"
+  groups:
+    actions-updates:
+      dependency-type: "production"
+      applies-to: "version-updates"
+    actions-dev-updates:
+      dependency-type: "development"
+      applies-to: "version-updates"
+- package-ecosystem: "cargo"
+  directory: "/"
+  schedule:
+    interval: "daily"
+  groups:
+    dep-updates:
+      dependency-type: "production"
+      applies-to: "version-updates"
+    dev-updates:
+      dependency-type: "development"
+      applies-to: "version-updates"
+- package-ecosystem: "docker"
+  directory: "/"
+  schedule:
+    interval: "daily"
+  groups:
+    image-updates:
+      dependency-type: "production"
+      applies-to: "version-updates"
+    image-dev-updates:
+      dependency-type: "development"
+      applies-to: "version-updates"
