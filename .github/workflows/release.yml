@@ -1,0 +1,54 @@
+name: release
+on:
+  release:
+    types:
+    - published
+permissions:
+  contents: read
+jobs:
+  oci-image:
+    runs-on: ubuntu-latest
+    name: Release OCI image build
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+    - name: harden runner
+      uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+      with:
+        egress-policy: audit
+    - name: checkout repository
+      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      with:
+        submodules: recursive
+    - name: install cosign
+      uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382 # v3.6.0
+    - name: setup docker buildx
+      uses: docker/setup-buildx-action@988b5a0280414f521da01fcc63a27aeeb4b104db # v3.6.1
+    - name: login to ghcr
+      uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+      with:
+        registry: ghcr.io
+        username: "${{ github.actor }}"
+        password: "${{ secrets.GITHUB_TOKEN }}"
+    - name: docker build and push ${{ matrix.component }}
+      uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
+      id: push
+      with:
+        file: ./Dockerfile
+        platforms: linux/amd64,linux/aarch64
+        tags: "ghcr.io/edera-dev/secbench:${{ github.event.release.tag_name }},ghcr.io/edera-dev/secbench:latest"
+        push: true
+    - name: cosign sign tag
+      run: cosign sign --yes "${TAGS}@${DIGEST}"
+      env:
+        DIGEST: "${{ steps.push.outputs.digest }}"
+        TAGS: "ghcr.io/edera-dev/secbench:${{ github.event.release.tag_name }}"
+        COSIGN_EXPERIMENTAL: "true"
+    - name: cosign sign latest
+      run: cosign sign --yes "${TAGS}@${DIGEST}"
+      env:
+        DIGEST: "${{ steps.push.outputs.digest }}"
+        TAGS: "ghcr.io/edera-dev/secbench:latest"
+        COSIGN_EXPERIMENTAL: "true"
