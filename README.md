@@ -20,7 +20,7 @@ overwhelming security engineers and CISOs with too much data.
 In general you will want to use the OCI image:
 
 ```
-% docker run --rm -it ghcr.io/edera-dev/secbench:latest
+% docker run --rm -it ghcr.io/edera-dev/secbench:nightly
 ...
 ```
 
